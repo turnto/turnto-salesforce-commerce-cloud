@@ -19,6 +19,8 @@ function beforeStep( parameters, stepExecution ) {
 	}
 
 	products = catalog.ProductMgr.queryAllSiteProducts();
+
+	dw.system.Logger.info('Products count: ' + products.length);	
 	
 	// Check mandatory parameters
 	if (empty(parameters.DataType) || (parameters.DataType != 'ratings' && parameters.DataType != 'ugc')) {

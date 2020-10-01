@@ -78,24 +78,24 @@ var run = function run() {
 								var productNode : XML = xmlStreamReader.readXMLObject();
 								var product = ProductMgr.getProduct(productNode.attribute('sku'));
 								if(product != null) {
-									dw.system.Logger.error('product id=' + product.ID);
+									dw.system.Logger.info('INFO product is found, product id=' + product.ID);
 									var reviewCount = parseInt(productNode.attribute("review_count"));
 									var relatedReviewCount = parseInt(productNode.attribute("related_review_count"));
 									var commentCount = parseInt(productNode.attribute("comment_count"));
 									//Round the rating to the nearest 0.5
 									var rating = Math.round((parseFloat(productNode.toString()) + 0.25) * 100.0) / 100.0;
 									rating = rating.toString();
-									var decimal = parseInt(rating.substring(2, 3))
-									rating = rating.substring(0, 1) + "." + (decimal >= 5 ? '5' : '0')
-								
-									txn.begin();
-	
-									product.custom.turntoAverageRating = rating;
-									product.custom.turntoReviewCount = reviewCount;
-									product.custom.turntoRelatedReviewCount = relatedReviewCount;
-									product.custom.turntoCommentCount = commentCount;
-	
-									txn.commit();
+									var decimal = parseInt(rating.substring(2, 3));
+									rating = rating.substring(0, 1) + "." + (decimal >= 5 ? '5' : '0');
+
+									txn.wrap(function(){
+										product.custom.turntoAverageRating = rating;
+										product.custom.turntoReviewCount = reviewCount;
+										product.custom.turntoRelatedReviewCount = relatedReviewCount;
+										product.custom.turntoCommentCount = commentCount;
+									});	
+								} else {
+									dw.system.Logger.error('ERROR product is NULL, product id=' + productNode.attribute('sku'));
 								}
 							} catch ( e ) {
 								error = true;
