@@ -136,8 +136,11 @@ function process( product, parameters, stepExecution )
 
 		//Non-localized data
 		// IMAGEURL
-		var image : MediaFile = product.getImage("large", 0);
+		var image : MediaFile = product.getImage("hi-res", 0);
 		var imageURL = '';
+		if (image == null) {
+			image = product.getImage("large", 0);
+		}
 		if (image == null) {
 			image = product.getImage("medium", 0);
 		}
