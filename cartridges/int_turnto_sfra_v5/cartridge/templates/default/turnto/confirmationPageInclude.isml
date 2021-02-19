@@ -29,11 +29,5 @@
 	</script>
 </isif>
 
-<iscomment>TurnTo Top Comment Include</iscomment>
-<isset name="TurnToHelper" value="${require('*/cartridge/scripts/util/TurnToHelperUtil')}" scope="page"/>
-<isset name="topCommentSkus" value="${TurnToHelper.getTopCommentSKUs(pdict.order.shipping)}" scope="page" />
-
-<isinclude template="product/components/ttTopComment"/>
-
 <iscomment>TurnTo Top Comment Capture</iscomment>
 <isinclude template="checkout/ttCommentCapture"/>

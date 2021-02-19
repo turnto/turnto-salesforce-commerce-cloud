@@ -33,10 +33,6 @@
 	</script>
 </isif>
 
-<iscomment>TurnTo Top Comment Include</iscomment>
-<isset name="topCommentSkus" value="${TurnToHelper.getTopCommentSKUsLegacy(pdict.Order.getProductLineItems())}" scope="page" />
-<isinclude template="product/components/ttTopComment"/>
-
 <iscomment>TurnTo Top Comment Capture</iscomment>
 <isinclude template="checkout/ttCommentCapture"/>
 

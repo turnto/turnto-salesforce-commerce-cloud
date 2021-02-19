@@ -13,20 +13,43 @@ var Logger = require('dw/system/Logger');
 var ProductMgr = require('dw/catalog/ProductMgr');
 
 var TurnToHelper = {
-		
-	getProductSku: function ( lookup_id ) {
+	
+	/**
+	 * @function
+	 * @name getProductSku
+	 * @param lookup_id the id of the product we're fetching the sku for (may just be returned without modification)
+	 * @return {String} The SKU value TurnTo uses to identify the product
+	 *
+	 * @description This function returns either:
+	 *		(a): If "turnToUseVariants" is "Yes", return the id passed in the lookup_id parameter
+	 *		(b): If "turnToUseVariants" is "No", call getParentSku
+	 *			getParentSku will either:
+	 *				(a): If the product ID belongs to a parent product, it returns the value back
+	 *				(b): If the product ID belongs to a variant product, it returns the products' parent's SKU
+	 */
+	getProductSku: function (lookup_id) {
 		var useVariants : Boolean = Boolean(Site.getCurrent().getCustomPreferenceValue('turntoUseVariants'));
 
 		if (useVariants) {
 			product_sku = lookup_id;
 		} else {
-			product_sku = TurnToHelper.getParentSku( lookup_id );
+			product_sku = TurnToHelper.getParentSku(lookup_id);
 		}
 		
 		return product_sku;
 	},
 		
-	getParentSku: function( lookup_id ) {
+	/**
+	 * @function
+	 * @name getParentSku
+	 * @param lookup_id the id of the product we're fetching the sku for (may just be returned without modification)
+	 * @return {String} The SKU value TurnTo uses to identify the parent product
+	 *
+	 * @description	This function returns either:
+	 *		(a): If the product ID belongs to a parent product, it returns the value back
+	 *		(b): If the product ID belongs to a variant product, it returns the products' parent's SKU
+	 */
+	getParentSku: function(lookup_id) {
 		
 	    var product = ProductMgr.getProduct(lookup_id)
 	    
@@ -42,37 +65,42 @@ var TurnToHelper = {
 	/**
 	 * @function
 	 * @name getLocalizedTurnToPreferenceValue
-	 * @param preferenceName can be turntoAuthKey or turntoSiteKey
 	 * @param locale The locale in which to retrieve a value. If not matching locale is returned, the default is used
-	 * @return {String} The localized value of the Site Preference specified by the preferenceName parameter
+	 * @return {String} An array containing the "turntoSiteKey", "turntoAuthKey", and "domain" values of the TurnTo preferences for the given locale
+	 *
+	 * @description This function returns the Site Key, Auth Key, and Domain preferences for the given locale
 	 */
-	getLocalizedTurnToPreferenceValue: function(locale ) {
-		var preferenceValue = {};
+	getLocalizedTurnToPreferenceValue: function(locale) {
+		
+		var preferenceArray = {};
 		var hashMapOfKeys = TurnToHelper.getHashMapOfKeys();
 		try {
-			for each(var obj in hashMapOfKeys.entrySet()) {
+			hashMapOfKeys.entrySet().forEach(function (obj) {
+				// Check if the TurnTo preferences JSON contains the given locale
 				if (obj.value.locales.indexOf(locale) != -1) {
-					preferenceValue = {
+					// IF FOUND return the preference values for the given locale
+					preferenceArray = {
 							turntoSiteKey: JSON.parse(obj.key),
 							turntoAuthKey: obj.value.authKey,
 							domain: obj.value.domain || TurnToHelper.getDefaultDataCenterUrl()
 					};
-					break;
 				}
-			}
+			});
 		} catch (e) {
 			TurnToHelper.getLogger().error('TurnToHelperUtil.js error:' + e.message);
 		}
-		return preferenceValue;
+		
+		return preferenceArray;
 	},
 	
 	/**
 	 * @function
 	 * @name getLocalizedSitePreferenceFromRequestLocale
-	 * @param preferenceName The name of the localized TurnTo SitePreference to retrieve
 	 * @return {String} The localized value of the Site Preference specified by the preferenceName parameter
 	 */
-	getLocalizedSitePreferenceFromRequestLocale: function( preferenceName ) {
+	getLocalizedSitePreferenceFromRequestLocale: function() {
+		// Grab the preferences for the request locale
+		// request.locale should return the locale as determined by the site setting
 		return TurnToHelper.getLocalizedTurnToPreferenceValue(request.locale);
 	},
 	
@@ -82,15 +110,15 @@ var TurnToHelper = {
 	 * @param locale The locale in which to check if a site and auth key exists
 	 * @return {Boolean} true if the locale contains both auth and site keys; false if it does not contain an auth key, site key or both
 	 */
-	hasSiteAndAuthKeyPerLocale: function( locale ) {
+	hasSiteAndAuthKeyPerLocale: function(locale) {
 		var hashMapOfKeys = TurnToHelper.getHashMapOfKeys();
 	
 		try {
-			for each(var obj in hashMapOfKeys.entrySet()) {
+			hashMapOfKeys.entrySet().forEach(function () {
 				if (obj.value.locales.indexOf(locale) != -1 && 'authKey' in obj.value && obj.value.authKey) {
 					return true;
 				}
-			}
+			});
 		} catch (e) {
 			TurnToHelper.getLogger().error('TurnToHelperUtil.js error:' + e.message);
 		}
@@ -101,21 +129,22 @@ var TurnToHelper = {
 	/**
 	 * @function
 	 * @name getAllowedLocales
-	 * @description retrieve the allowed lcoales per site
-	 * @description retrieve the allowed locales per site that contain both a site and auth key
 	 * @returns {List} allowed locales
+	 *
+	 * @description retrieve the allowed locales per site that contain both a site and auth key
 	 */
 	getAllowedLocales: function() {
-		//loop through site enabled locales to generate a catalog export for each locale		
+		// Get the locales for the current site
 		var siteAllowedLocales = Site.getCurrent().getAllowedLocales();
 		var adjustedAllowedLocales = [];
 		
-		for each(var locale in siteAllowedLocales) {
+		//loop through site enabled locales..
+		siteAllowedLocales.forEach(function () {
 			//If turntoAuthKey and turntoSiteKey values are not defined for a particular locale the job should skip the locale.
 			if(TurnToHelper.hasSiteAndAuthKeyPerLocale(locale)) {
 				adjustedAllowedLocales.push(locale);
 			}
-		}
+		});
 		
 		return adjustedAllowedLocales;
 	},
@@ -123,10 +152,11 @@ var TurnToHelper = {
 	/**
 	 * @function
 	 * @name replaceNull
-	 * @description Replaces null with the specified replacement string.
-	 * @param {String} The string to replace if null
-	 * @param {String} The string to use as a replacement
+	 * @param {String} str The string to replace if null
+	 * @param {String} replace The string to use as a replacement
 	 * @returns {String} - replace if str is null, otherwise str
+	 *
+	 * @description Replaces null with the specified replacement string.
 	 */
 	replaceNull: function(str, replace) {
 		return (!empty(str)) ? str : replace;	
@@ -135,13 +165,17 @@ var TurnToHelper = {
 	/**
 	 * @function
 	 * @name getHashMapOfKeys
-	 * @description Function to get map of TurnTo keys with locales, authKey from custom prefernce
 	 * @returns {String} - Return map of TurnTo keys with locales, authKey
+	 *
+	 * @description Function to get map of TurnTo keys with locales, authKey from custom prefernce
 	 */
 	getHashMapOfKeys: function () {
+		// Get the TurnTo JSON for the current site
 		var TurnToSiteAuthKey = Site.getCurrent().getCustomPreferenceValue('TurnToSiteAuthKeyJSON');
+		// Split by line/tab
 		var rg = new RegExp('(\n|\t)', 'gm');
 		var result = JSON.parse(TurnToSiteAuthKey.replace(rg, ''));
+		// Loop through each line in the JSON and insert the KEY:VALUE pair into the hash map
 		var hashMapOfKeys = new HashMap();
 		for (var key in result) {
 			hashMapOfKeys.put(JSON.stringify(key), result[key]);
@@ -152,12 +186,14 @@ var TurnToHelper = {
 	/**
 	 * @function
 	 * @name getPageID
-	 * @description Retrieve Page ID from current URL
 	 * @returns {string} page ID
+	 *
+	 * @description This function does it's best to determine what the TurnTo-defined pageID should be.
+	 * 		For example, if the page's URL
 	 */
 	getPageID: function () {
-		var pageID,
-			currentPage = request.httpPath;
+		var pageID = '';
+		var currentPage = request.httpPath;
 
 		//NOTE: these can be modified if you need more or less defined page IDs
 		//if you do modify the following switch cases then make sure you adjust the conditional statements in 'htmlHeadIncludeJS.isml'
@@ -184,7 +220,8 @@ var TurnToHelper = {
 	
 	/**
 	 * @function
-	 * @return {String} default url for TurnTo
+	 * @name getDefaultDataCenterUrl
+	 * @return {String} The value of the "defaultDataCenterUrl" configuration for the current site
 	 */
 	getDefaultDataCenterUrl: function () {
 		return Site.getCurrent().getCustomPreferenceValue('defaultDataCenterUrl');
@@ -200,8 +237,9 @@ var TurnToHelper = {
 
 	/**
 	 * @name getTurnToStarClass
-	 * @desc returns the turnto star class
 	 * @param {String} presentationID
+	 *
+	 * @description This function is used during listing page filtering. It takes in the selected filter and outputs the class associated with the appropriate TurnTo rating.
 	 */
 	getTurnToStarClass: function (presentationID) {
 		var turntoStarClass = '';
@@ -210,34 +248,6 @@ var TurnToHelper = {
 			turntoStarClass = 'TTratingBox TTrating-' + presentationID;
 		}
 		return turntoStarClass;
-	},
-
-	/**
-	 * @name getTopCommentSKUsLegacy
-	 * @desc returns the turnto top comment SKUs for Site Genesis (Legacy) only
-	 * @param {ProductLineItems} productLineItems
-	 */
-	getTopCommentSKUsLegacy: function (productLineItems) {
-		var topCommentSkus = [];
-		for each(var item in productLineItems) {
-			topCommentSkus.push(item.getProduct().getID());
-		} 
-		return topCommentSkus.join(',');
-	},
-
-		/**
-	 * @name getTopCommentSKUs
-	 * @desc returns the turnto top comment SKUs
-	 * @param {ShippingModel} shipping
-	 */
-	getTopCommentSKUs: function (shipping) {
-		var topCommentSkus = [];
-		for each(var shippingModel in shipping) {
-			for each(var item in shippingModel.productLineItems.items) {
-				topCommentSkus.push(item.id);
-			}
-		} 
-		return topCommentSkus.join(',');
 	}
 }
 

@@ -6,7 +6,6 @@
 
 /* API Modules */
 var Logger = require('dw/system/Logger');
-var Site = require('dw/system/Site');
 var File = require('dw/io/File');
 var ProductMgr = require('dw/catalog/ProductMgr');
 
