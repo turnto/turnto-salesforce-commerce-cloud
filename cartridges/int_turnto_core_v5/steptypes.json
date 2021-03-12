@@ -281,7 +281,7 @@
 				"@supports-site-context": "true",
 				"@supports-organization-context": "false",
 				"description": "Exports catalog from one or more site locales to the local IMPEX.",
-				"module": "int_turnto_core_v5/cartridge/scripts/jobsteps/exportCatalog.js",
+				"module": "int_turnto_core_v5/cartridge/scripts/jobsteps/exportCatalogSingleFile.js",
 				"before-step-function": "beforeStep",
 				"total-count-function": "getTotalCount",
 				"before-chunk-function": "",
