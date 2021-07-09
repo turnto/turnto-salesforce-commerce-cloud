@@ -277,9 +277,11 @@ function process(product) {
                 localesArray.push(locales);
             }
 
+            var urlOverride = key.url;
+
             localesArray.forEach(function (l) {
                 request.setLocale(l);
-                var url = URLUtils.http('Product-Show', 'pid', product.getID()).toString();
+                var url = urlOverride + URLUtils.url('Product-Show', 'pid', product.getID()).toString();
                 var item = {
                     title: TurnToHelper.sanitizeStr(product.getName(), ' '),
                     itemUrl: url,
@@ -298,7 +300,7 @@ function process(product) {
                 price: TurnToHelper.replaceNull(priceStr, ''),
                 currency: TurnToHelper.replaceNull(price.getCurrencyCode(), ''),
                 active: product.getAvailabilityModel().isOrderable() ? 'Y' : 'N',
-                itemurl: URLUtils.http('Product-Show', 'pid', product.getID()).toString(),
+                itemurl: urlOverride + URLUtils.url('Product-Show', 'pid', product.getID()).toString();,
                 category: '', // Leaving blank because CATEGORYPATHJSON is populated
                 keywords: TurnToHelper.sanitizeStr(keywords, ' '),
                 instock: product.getOnlineFlag() ? 'Y' : 'N',
